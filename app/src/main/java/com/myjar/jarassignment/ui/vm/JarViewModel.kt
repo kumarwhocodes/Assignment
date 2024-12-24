@@ -18,9 +18,20 @@ class JarViewModel : ViewModel() {
 
     private val repository: JarRepository = JarRepositoryImpl(createRetrofit())
 
+    init {
+        fetchData()
+    }
+
     fun fetchData() {
         viewModelScope.launch {
-            repository.fetchResults()
+            try {
+                repository.fetchResults()
+                    .collect { items ->
+                        _listStringData.value = items
+                    }
+            } catch (e: Exception){
+                println(e.message)
+            }
         }
     }
 }
