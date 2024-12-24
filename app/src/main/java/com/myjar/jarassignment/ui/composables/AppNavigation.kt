@@ -12,8 +12,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -46,7 +48,7 @@ fun AppNavigation(
         }
         composable("item_detail/{itemId}") { backStackEntry ->
             val itemId = backStackEntry.arguments?.getString("itemId")
-            ItemDetailScreen(itemId = itemId)
+            ItemDetailScreen(itemId = itemId, viewModel = viewModel)
         }
     }
 }
@@ -109,12 +111,29 @@ fun ItemCard(item: ComputerItem, onClick: () -> Unit) {
 }
 
 @Composable
-fun ItemDetailScreen(itemId: String?) {
-    // Fetch the item details based on the itemId
-    // Here, you can fetch it from the ViewModel or repository
-    Text(
-        text = "Item Details for ID: $itemId", modifier = Modifier
+fun ItemDetailScreen(itemId: String?, viewModel: JarViewModel) {
+    LaunchedEffect(itemId) {
+        itemId?.let { viewModel.fetchItemDetails(it) }
+    }
+
+    val itemDetails by viewModel.itemDetails.collectAsState()
+
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-    )
+            .padding(10.dp)
+    ) {
+        if (itemDetails != null) {
+            Text(text = "Item Details for ID: ${itemDetails!!.id}")
+            Text(text = "Name: ${itemDetails!!.name}")
+            itemDetails!!.data?.let { itemData ->
+                Text(text = "Screen size: ${itemData.screenSize}")
+                Text(text = "Capacity: ${itemData.capacity}")
+                Text(text = "Color: ${itemData.color}")
+            }
+        } else {
+            Text(text = "Loading...")
+        }
+    }
 }
+

@@ -7,17 +7,37 @@ import kotlinx.coroutines.flow.flow
 
 interface JarRepository {
     suspend fun fetchResults(): Flow<List<ComputerItem>>
+    suspend fun fetchItemDetails(itemId: String): Flow<ComputerItem?>
 }
 
 class JarRepositoryImpl(
     private val apiService: ApiService
 ) : JarRepository {
+
+    private var allItems: List<ComputerItem> = emptyList()
+
     override suspend fun fetchResults(): Flow<List<ComputerItem>> = flow {
         try {
-            emit(apiService.fetchResults())
+            val items = apiService.fetchResults()
+            allItems = items
+            emit(items)
         } catch (e: Exception){
             println(e.message)
             emit(emptyList())
+        }
+    }
+
+    override suspend fun fetchItemDetails(itemId: String): Flow<ComputerItem?> = flow {
+        try {
+            if (allItems.isEmpty()) {
+                val items = apiService.fetchResults()
+                allItems = items
+            }
+            val item = allItems.find { it.id == itemId }
+            emit(item)
+        } catch (e: Exception) {
+            println("Error fetching item details: ${e.message}")
+            emit(null)
         }
     }
 }

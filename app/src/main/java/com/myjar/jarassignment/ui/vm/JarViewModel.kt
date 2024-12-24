@@ -24,6 +24,9 @@ class JarViewModel : ViewModel() {
     val filteredList: StateFlow<List<ComputerItem>>
         get() = _filteredList
 
+    private val _itemDetails = MutableStateFlow<ComputerItem?>(null)
+    val itemDetails: StateFlow<ComputerItem?>
+        get() = _itemDetails
 
     private val repository: JarRepository = JarRepositoryImpl(createRetrofit())
 
@@ -52,6 +55,18 @@ class JarViewModel : ViewModel() {
             currentList
         } else {
             currentList.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }
+
+    fun fetchItemDetails(itemId: String) {
+        viewModelScope.launch {
+            try {
+                repository.fetchItemDetails(itemId).collect { details ->
+                    _itemDetails.value = details
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
