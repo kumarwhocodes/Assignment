@@ -16,6 +16,15 @@ class JarViewModel : ViewModel() {
     val listStringData: StateFlow<List<ComputerItem>>
         get() = _listStringData
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String>
+        get() = _searchQuery
+
+    private val _filteredList = MutableStateFlow<List<ComputerItem>>(emptyList())
+    val filteredList: StateFlow<List<ComputerItem>>
+        get() = _filteredList
+
+
     private val repository: JarRepository = JarRepositoryImpl(createRetrofit())
 
     init {
@@ -28,10 +37,22 @@ class JarViewModel : ViewModel() {
                 repository.fetchResults()
                     .collect { items ->
                         _listStringData.value = items
+                        _filteredList.value = items
                     }
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 println(e.message)
             }
         }
     }
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+        val currentList = _listStringData.value
+        _filteredList.value = if (query.isBlank()) {
+            currentList
+        } else {
+            currentList.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }
+
 }
